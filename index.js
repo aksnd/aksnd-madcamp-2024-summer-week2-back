@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
 app.get('/article', (req, res) => {
-  const articleId = req.query.id;
+  const articleId = req.query.article_id;
 
   if (!articleId) {
     return res.status(400).json({ error: 'ID is required' });
@@ -90,7 +90,7 @@ app.get('/article', (req, res) => {
 });
 
 app.get('/words', (req, res) => {
-  const articleId = req.query.id;
+  const articleId = req.query.article_id;
 
   if (!articleId) {
     return res.status(400).json({ error: 'ID is required' });
