@@ -7,7 +7,6 @@ app.get('/', (req, res) => { //express 앱(app)을 넣고, root directory에 오
   res.send('Hello World!') //"Hello World!" 를 출력되게 해준다.
 })
 
-
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 }) //포트 5000번에서 이 앱을 실행한다.
