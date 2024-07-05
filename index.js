@@ -1,7 +1,12 @@
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
+const axios = require('axios');
+const util = require('util');
+const bodyParser = require('body-parser');
 const app = express();
+
+const port = 3001;
 require("dotenv").config();
 
 const API_KEY = "AIzaSyAYadrNbAJu8LP-Zf2G1oQNSAYdqt0c5mk";
@@ -23,9 +28,8 @@ const corsOptions = {
 
 
 app.use(cors(corsOptions));
+app.use(bodyParser.json());
 
-
-const port = 3001;
 
 // MySQL 연결 설정
 const connection = mysql.createConnection({
@@ -47,7 +51,6 @@ connection.connect((err) => {
 // JSON 파싱 미들웨어
 app.use(express.json());
 
-//기사 삽입
 
 async function word_translate(word) {
   // The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
@@ -61,6 +64,102 @@ async function word_translate(word) {
   console.log(text);
   return text;
 }
+
+const query = util.promisify(connection.query).bind(connection);
+/*
+app.post('/logout', async (req, res) => {
+  const accessToken = req.body.accessToken;
+
+  try {
+    console.log(`Unlinking with access token: ${accessToken}`);
+
+    // 카카오 연결 해제 요청
+    const unlinkResponse = await axios.post('https://kapi.kakao.com/v1/user/unlink', null, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    console.log('Unlink response:', unlinkResponse.data);
+
+    // 사용자 정보 삭제
+    await query('DELETE FROM users WHERE access_token = ?', [accessToken]);
+
+    res.status(200).send('Logged out from Kakao and unlinked');
+  } catch (error) {
+    console.error('Failed to unlink from Kakao', error.response ? error.response.data : error.message);
+    res.status(500).send('Failed to unlink from Kakao');
+  }
+});
+*/
+app.get('/logout/callback', (req, res) => {
+  // 클라이언트에서 세션과 쿠키 제거
+  res.send(`
+    <script>
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c.trim().split("=")[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      });
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = 'http://localhost:3000/login'; // 로그아웃 후 로그인 페이지로 리디렉션
+    </script>
+  `);
+});
+
+app.get('/auth/kakao/callback', async (req, res) => {
+  const code = req.query.code;
+  const client_id = '17132d31284a95180bea1e6df5b24fb9'; // YOUR_APP_KEY 부분을 발급받은 REST API 키로 변경
+  const redirect_uri = 'http://localhost:3001/auth/kakao/callback'; // Redirect URI 변경
+
+  console.log('Authorization code:', code);
+
+  try {
+    const tokenResponse = await axios.post('https://kauth.kakao.com/oauth/token', null, {
+      params: {
+        grant_type: 'authorization_code',
+        client_id: client_id,
+        redirect_uri: redirect_uri,
+        code: code
+      }
+    });
+
+    console.log('Token response:', tokenResponse.data);
+
+    const accessToken = tokenResponse.data.access_token;
+    const refreshToken = tokenResponse.data.refresh_token;
+
+    const userResponse = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    console.log('User response:', userResponse.data);
+
+    const user = userResponse.data;
+    const kakaoId = user.id;
+    const nickname = user.properties?.nickname || '닉네임 없음';
+
+    // 사용자 정보 저장 또는 업데이트
+    const query = 'INSERT INTO users (kakao_id, nickname, access_token, refresh_token) VALUES (?, ?, ?, ?)';
+      connection.query(query, [kakaoId, nickname, accessToken,refreshToken], (err, results) => {
+        if (err) {
+          console.error('Error inserting word:', err.stack);
+          return res.status(500).json({ error: 'Database error' });
+        }
+      });
+
+    // 로그인 성공 시 메인 페이지로 리디렉션
+    res.redirect(`http://localhost:3000/main?nickname=${nickname}&accessToken=${accessToken}`);
+  } catch (error) {
+    console.error('Error:', error.response ? error.response.data : error.message);
+    // 로그인 실패 시 로그인 페이지로 리디렉션
+    res.redirect('http://localhost:3000/login?error=login_failed');
+  }
+});
+
+
+
 
 
 app.get('/', (req, res) => {
