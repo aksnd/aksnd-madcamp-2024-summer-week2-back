@@ -32,7 +32,7 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: 'molipcamp',
-  database: 'madcamp2',
+  database: 'madcamp3',
 });
 
 // MySQL 연결
