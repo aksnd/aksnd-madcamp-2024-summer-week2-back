@@ -55,43 +55,44 @@ app.use(express.json());
 async function word_translate(word) {
   // The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
-  console.log(word);
   const prompt = `please translate the english vocabulary '${word}' into Korean. only respond the translated korean word. do not add any prefix or suffix except for the translated korean vocabulary.`;
-  console.log(prompt);
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
-  console.log(text);
   return text;
 }
 
+async function get_article(category){
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+  const prompt = `Just generate only one article about ${category}. 
+  The response must be in the format "Title:" "Contents:":
+  Title: <title of the article in 'string' type, and must be filled with meaningful context.>
+  Contents: <contents of the article, just String>`;
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = await response.text();
+
+  const titleMatch = text.match(/Title:\s*(.*)\s*Contents:/);
+  const contentsMatch = text.match(/Contents:\s*([\s\S]*)/);
+
+  const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
+  const contents = contentsMatch ? contentsMatch[1].trim() : 'No contents available';
+  //console.log(`제목: ${title}`);
+  //console.log(`내용: ${contents}`);
+  
+  const articleData = {
+    title: title,
+    contents: contents
+  };
+
+  return articleData;
+}
+
 const query = util.promisify(connection.query).bind(connection);
-/*
-app.post('/logout', async (req, res) => {
-  const accessToken = req.body.accessToken;
 
-  try {
-    console.log(`Unlinking with access token: ${accessToken}`);
+//여기서 부터 app.get 시작
 
-    // 카카오 연결 해제 요청
-    const unlinkResponse = await axios.post('https://kapi.kakao.com/v1/user/unlink', null, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    });
 
-    console.log('Unlink response:', unlinkResponse.data);
-
-    // 사용자 정보 삭제
-    await query('DELETE FROM users WHERE access_token = ?', [accessToken]);
-
-    res.status(200).send('Logged out from Kakao and unlinked');
-  } catch (error) {
-    console.error('Failed to unlink from Kakao', error.response ? error.response.data : error.message);
-    res.status(500).send('Failed to unlink from Kakao');
-  }
-});
-*/
 app.get('/logout/callback', (req, res) => {
   // 클라이언트에서 세션과 쿠키 제거
   res.send(`
@@ -111,7 +112,6 @@ app.get('/auth/kakao/callback', async (req, res) => {
   const client_id = '17132d31284a95180bea1e6df5b24fb9'; // YOUR_APP_KEY 부분을 발급받은 REST API 키로 변경
   const redirect_uri = 'http://localhost:3001/auth/kakao/callback'; // Redirect URI 변경
 
-  console.log('Authorization code:', code);
 
   try {
     const tokenResponse = await axios.post('https://kauth.kakao.com/oauth/token', null, {
@@ -123,8 +123,6 @@ app.get('/auth/kakao/callback', async (req, res) => {
       }
     });
 
-    console.log('Token response:', tokenResponse.data);
-
     const accessToken = tokenResponse.data.access_token;
     const refreshToken = tokenResponse.data.refresh_token;
 
@@ -134,23 +132,26 @@ app.get('/auth/kakao/callback', async (req, res) => {
       }
     });
 
-    console.log('User response:', userResponse.data);
 
     const user = userResponse.data;
     const kakaoId = user.id;
     const nickname = user.properties?.nickname || '닉네임 없음';
-
     // 사용자 정보 저장 또는 업데이트
-    const query = 'INSERT INTO users (kakao_id, nickname, access_token, refresh_token) VALUES (?, ?, ?, ?)';
-      connection.query(query, [kakaoId, nickname, accessToken,refreshToken], (err, results) => {
-        if (err) {
-          console.error('Error inserting word:', err.stack);
-          return res.status(500).json({ error: 'Database error' });
-        }
-      });
+
+    const existingUserQuery = 'SELECT * FROM users WHERE kakao_id = ?';
+    const existingUser = await query(existingUserQuery, [kakaoId]);
+
+    if (existingUser.length === 0) {
+      // 사용자 정보가 없으면 추가
+      const insertUserQuery = 'INSERT INTO users (kakao_id, nickname) VALUES (?, ?)';
+      await query(insertUserQuery, [kakaoId, nickname]);
+      console.log('User added:', kakaoId);
+    } else {
+      console.log('User already exists:', kakaoId);
+    }
 
     // 로그인 성공 시 메인 페이지로 리디렉션
-    res.redirect(`http://localhost:3000/main?nickname=${nickname}&accessToken=${accessToken}`);
+    res.redirect(`http://localhost:3000/login?kakaoId=${kakaoId}`);
   } catch (error) {
     console.error('Error:', error.response ? error.response.data : error.message);
     // 로그인 실패 시 로그인 페이지로 리디렉션
@@ -158,21 +159,67 @@ app.get('/auth/kakao/callback', async (req, res) => {
   }
 });
 
-
-
-
-
-app.get('/', (req, res) => {
-  res.send('Hello, world!');
+app.get('/nickname',async(req,res)=>{
+  const kakao_id = req.query.kakao_id;
+  const getnicknamequery = 'SELECT nickname FROM users WHERE kakao_id = ?';
+  nickname = await query(getnicknamequery,[kakao_id]);
+  res.json(nickname[0]);
 });
-app.get('/article', (req, res) => {
-  const articleId = req.query.article_id;
 
-  if (!articleId) {
+
+app.get('/random-article', async (req, res) => { //random하게 default에서 1개 가져와서 user_id기반으로 집어넣고, 그 기사를 json형식으로 반환하는 코드
+  try {
+    // 요청에서 kakao_id 가져오기
+    const kakao_id = req.query.kakao_id;
+
+    if (!kakao_id) {
+      return res.status(400).send('kakao_id is required');
+    }
+
+    // 랜덤한 기사를 선택하는 쿼리
+    const article_json = await get_article('economy'); 
+    const { title, contents } = article_json;
+    
+    console.log(title);
+    
+    if (title.length === 0 || contents.length=== 0) {
+      return res.status(404).send('No articles found');
+    }
+    
+    // User_article 테이블에 기사 삽입
+    const insertResult= await query(
+      'INSERT INTO User_article (user_id, title, contents,author,date) VALUES (?, ?, ?, ?, ?)',
+      [kakao_id, title, contents,"chatgpt","2024-07-06"]
+    );
+
+    const insertedId = insertResult.insertId;
+
+    // 삽입된 레코드 조회
+    const userArticleRows = await query('SELECT * FROM User_article WHERE article_id = ?', [insertedId]);
+
+    if (userArticleRows.length === 0) {
+      return res.status(404).send('Inserted article not found');
+    }
+
+    const userArticle = userArticleRows[0];
+
+    res.json(userArticle);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+  
+});
+
+app.get('/article', (req, res) => { //기사를 id를 기반으로 받아오는 코드
+  const user_id = req.query.user_id;
+
+  if (!user_id) {
     return res.status(400).json({ error: 'ID is required' });
   }
 
-  const query = 'SELECT * FROM article WHERE id = ?';
+  const query = 'SELECT * FROM article WHERE user_id = ?';
   connection.query(query, [articleId], (err, results) => {
     if (err) {
       console.error('Error executing query:', err.stack);
@@ -184,7 +231,7 @@ app.get('/article', (req, res) => {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    res.json(results[0]);
+    res.json(results);
   });
 });
 
@@ -214,16 +261,16 @@ app.get('/words', (req, res) => {
 
 
 app.get('/word', async(req, res) => {
-  const articleId = req.query.article_id;
+  const article_id = req.query.article_id;
   const word = req.query.word;
 
-  if (!articleId || !word) {
+  if (!article_id || !word) {
     return res.status(400).json({ error: 'article_id and word are required' });
   }
   word_translate(word)
     .then(translatedWord => {
-      const query = 'INSERT INTO word (article_id, word, korean_word) VALUES (?, ?, ?)';
-      connection.query(query, [articleId, word, translatedWord], (err, results) => {
+      const query = 'INSERT INTO words (article_id, word, word_korean) VALUES (?, ?, ?)';
+      connection.query(query, [article_id, word, translatedWord], (err, results) => {
         if (err) {
           console.error('Error inserting word:', err.stack);
           return res.status(500).json({ error: 'Database error' });
