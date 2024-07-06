@@ -66,32 +66,7 @@ async function word_translate(word) {
 }
 
 const query = util.promisify(connection.query).bind(connection);
-/*
-app.post('/logout', async (req, res) => {
-  const accessToken = req.body.accessToken;
 
-  try {
-    console.log(`Unlinking with access token: ${accessToken}`);
-
-    // 카카오 연결 해제 요청
-    const unlinkResponse = await axios.post('https://kapi.kakao.com/v1/user/unlink', null, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    });
-
-    console.log('Unlink response:', unlinkResponse.data);
-
-    // 사용자 정보 삭제
-    await query('DELETE FROM users WHERE access_token = ?', [accessToken]);
-
-    res.status(200).send('Logged out from Kakao and unlinked');
-  } catch (error) {
-    console.error('Failed to unlink from Kakao', error.response ? error.response.data : error.message);
-    res.status(500).send('Failed to unlink from Kakao');
-  }
-});
-*/
 app.get('/logout/callback', (req, res) => {
   // 클라이언트에서 세션과 쿠키 제거
   res.send(`
@@ -150,7 +125,7 @@ app.get('/auth/kakao/callback', async (req, res) => {
       });
 
     // 로그인 성공 시 메인 페이지로 리디렉션
-    res.redirect(`http://localhost:3000/main?nickname=${nickname}&accessToken=${accessToken}`);
+    res.redirect(`http://localhost:3000/login?kakaoId=${kakaoId}`);
   } catch (error) {
     console.error('Error:', error.response ? error.response.data : error.message);
     // 로그인 실패 시 로그인 페이지로 리디렉션
@@ -159,7 +134,19 @@ app.get('/auth/kakao/callback', async (req, res) => {
 });
 
 
-
+app.post('/auth/check', async (req, res) => {
+  const kakaoId = req.body.kakaoId;
+  try {
+    const user = await query('SELECT * FROM users WHERE kakao_id = ?', [kakaoId]);
+    if (user.length > 0) {
+      res.json({ valid: true });
+    } else {
+      res.json({ valid: false });
+    }
+  } catch (error) {
+    res.status(500).json({ valid: false });
+  }
+});
 
 
 app.get('/', (req, res) => {
