@@ -65,8 +65,8 @@ async function word_translate(word) {
 async function get_article(category){
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
   const prompt = `Just generate only one article about ${category}. 
-  The response must be in the format:
-  Title: <title of the article, just String>
+  The response must be in the format "Title:" "Contents:":
+  Title: <title of the article in 'string' type, and must be filled with meaningful context.>
   Contents: <contents of the article, just String>`;
   const result = await model.generateContent(prompt);
   const response = await result.response;
@@ -181,7 +181,6 @@ app.get('/random-article', async (req, res) => { //random하게 default에서 1�
     const { title, contents } = article_json;
     
     console.log(title);
-    console.log(contents);
     
     if (title.length === 0 || contents.length=== 0) {
       return res.status(404).send('No articles found');
@@ -270,7 +269,7 @@ app.get('/word', async(req, res) => {
   }
   word_translate(word)
     .then(translatedWord => {
-      const query = 'INSERT INTO word (article_id, word, word_korean) VALUES (?, ?, ?)';
+      const query = 'INSERT INTO words (article_id, word, word_korean) VALUES (?, ?, ?)';
       connection.query(query, [article_id, word, translatedWord], (err, results) => {
         if (err) {
           console.error('Error inserting word:', err.stack);
