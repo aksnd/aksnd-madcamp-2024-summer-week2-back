@@ -114,15 +114,19 @@ app.get('/auth/kakao/callback', async (req, res) => {
     const user = userResponse.data;
     const kakaoId = user.id;
     const nickname = user.properties?.nickname || '닉네임 없음';
-
     // 사용자 정보 저장 또는 업데이트
-    const query = 'INSERT INTO users (kakao_id, nickname, access_token, refresh_token) VALUES (?, ?, ?, ?)';
-      connection.query(query, [kakaoId, nickname, accessToken,refreshToken], (err, results) => {
-        if (err) {
-          console.error('Error inserting word:', err.stack);
-          return res.status(500).json({ error: 'Database error' });
-        }
-      });
+
+    const existingUserQuery = 'SELECT * FROM users WHERE kakao_id = ?';
+    const existingUser = await query(existingUserQuery, [kakaoId]);
+
+    if (existingUser.length === 0) {
+      // 사용자 정보가 없으면 추가
+      const insertUserQuery = 'INSERT INTO users (kakao_id, nickname) VALUES (?, ?)';
+      await query(insertUserQuery, [kakaoId, nickname]);
+      console.log('User added:', kakaoId);
+    } else {
+      console.log('User already exists:', kakaoId);
+    }
 
     // 로그인 성공 시 메인 페이지로 리디렉션
     res.redirect(`http://localhost:3000/login?kakaoId=${kakaoId}`);
@@ -133,19 +137,12 @@ app.get('/auth/kakao/callback', async (req, res) => {
   }
 });
 
-
-app.post('/auth/check', async (req, res) => {
-  const kakaoId = req.body.kakaoId;
-  try {
-    const user = await query('SELECT * FROM users WHERE kakao_id = ?', [kakaoId]);
-    if (user.length > 0) {
-      res.json({ valid: true });
-    } else {
-      res.json({ valid: false });
-    }
-  } catch (error) {
-    res.status(500).json({ valid: false });
-  }
+app.get('/nickname',async(req,res)=>{
+  const kakao_id = req.query.kakao_id;
+  console.log(kakao_id);
+  const getnicknamequery = 'SELECT nickname FROM users WHERE kakao_id = ?';
+  nickname = await query(getnicknamequery,[kakao_id]);
+  res.json(nickname[0]);
 });
 
 
