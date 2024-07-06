@@ -65,7 +65,7 @@ async function word_translate(word) {
 async function get_article(category){
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
   const prompt = `Just generate only one article about ${category}. 
-  The response should be in the format:
+  The response must be in the format:
   Title: <title of the article, just String>
   Contents: <contents of the article, just String>`;
   const result = await model.generateContent(prompt);
