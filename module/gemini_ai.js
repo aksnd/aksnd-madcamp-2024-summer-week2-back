@@ -24,7 +24,7 @@ async function word_translate(word) {
 
 //기사 하나를 출력하는 코드
 async function get_article(category){
-    const prompt = `Just generate only one article about ${category}. 
+    const prompt = `Just generate only one article about ${category}. please give me the new topic of ${category}.
     The response must be in the format "Title:" "Contents:":
     Title: <title of the article in 'string' type, and must be filled with meaningful context.>
     Contents: <contents of the article, just String>`;

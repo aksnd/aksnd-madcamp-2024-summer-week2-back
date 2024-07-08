@@ -47,7 +47,7 @@ router.post('/word', async(req, res) => {
         }
       });
       // 응답으로 번역된 단어 반환
-      res.json({word: word, translated_word: translatedWord });
+      res.json({word: word, word_korean: translatedWord });
     })
     .catch(error => {
       console.error('Error during translation:', error);

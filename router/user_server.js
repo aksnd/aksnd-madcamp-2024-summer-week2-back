@@ -9,11 +9,11 @@ const {word_translate, get_article} = require('../module/gemini_ai.js');
 
 router.post('/update-category', (req, res) => {
     const { user_id, category_number, category_text } = req.body;
-  
+    //console.log(`${user_id}, ${category_number}, ${category_text}`);
     if (!user_id || !category_number || !category_text) {
       return res.status(400).json({ error: 'user_id, category_number and category_text are required' });
     }
-  
+    
     let categoryColumn;
     switch (category_number) {
       case 1:
@@ -45,13 +45,12 @@ router.post('/update-category', (req, res) => {
 
 router.get('/get-category', (req, res) => {
     const { user_id, category_number } = req.query;
-
     if (!user_id || !category_number) {
         return res.status(400).json({ error: 'user_id and category_number are required' });
     }
 
     let categoryColumn;
-    switch (parseInt(category_number, 10)) {
+    switch (parseInt(category_number,10)) {
         case 1:
         categoryColumn = 'user_category1';
         break;
@@ -67,6 +66,7 @@ router.get('/get-category', (req, res) => {
         default:
         return res.status(400).json({ error: 'Invalid category_number' });
     }
+    //console.log(`${user_id},${category_number}`);
 
     const query = `SELECT ${categoryColumn} FROM users WHERE kakao_id = ?`;
 
@@ -79,9 +79,24 @@ router.get('/get-category', (req, res) => {
         if (results.length === 0) {
         return res.status(404).json({ error: 'User not found' });
         }
-
-        const category = results[0].category;
-        res.json({ user_id, category_number, category });
+        let category ='';
+        switch (parseInt(category_number,10)) {
+          case 1:
+          category = results[0].user_category1;
+          break;
+          case 2:
+          category = results[0].user_category2;
+          break;
+          case 3:
+          category = results[0].user_category3;
+          break;
+          case 4:
+          category = results[0].user_category4;
+          break;
+          default:
+          return res.status(400).json({ error: 'Invalid category_number' });
+        }
+        res.json({ user_id:user_id, category_number:category_number, category_text:category });
     });
 });
 
