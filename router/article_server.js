@@ -8,10 +8,10 @@ const {word_translate, get_article} = require('../module/gemini_ai.js');
 
 
 
-router.get('/random-article', async (req, res) => { //random하게 default에서 1개 가져와서 user_id기반으로 집어넣고, 그 기사를 json형식으로 반환하는 코드
+router.post('/random-article', async (req, res) => { //random하게 default에서 1개 가져와서 user_id기반으로 집어넣고, 그 기사를 json형식으로 반환하는 코드
     try {
       // 요청에서 kakao_id 가져오기
-      const kakao_id = req.query.kakao_id;
+      const kakao_id = req.body.kakao_id;
   
       if (!kakao_id) {
         return res.status(400).send('kakao_id is required');

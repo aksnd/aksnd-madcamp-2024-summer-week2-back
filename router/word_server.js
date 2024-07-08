@@ -31,9 +31,8 @@ router.get('/words', (req, res) => {
   });
 
 
-router.get('/word', async(req, res) => {
-  const article_id = req.query.article_id;
-  const word = req.query.word;
+router.post('/word', async(req, res) => {
+  const { article_id, word } = req.body;
 
   if (!article_id || !word) {
     return res.status(400).json({ error: 'article_id and word are required' });
