@@ -50,7 +50,7 @@ router.post('/word', async(req, res) => {
 });
 
 
-router.delete('/delete-word', async (req, res) => { //random하게 default에서 1개 가져와서 user_id기반으로 집어넣고, 그 기사를 json형식으로 반환하는 코드
+router.delete('/delete-word', async (req, res) => { 
   try {
     const word_id = req.query.word_id;
     if (!word_id) {
@@ -67,6 +67,18 @@ router.delete('/delete-word', async (req, res) => { //random하게 default에서
     res.status(500).send('Internal Server Error');
   }
   
+});
+
+router.get('/read-word-num',async(req, res)=>{
+  const user_id = req.query.user_id;
+  if (!user_id) {
+    return res.status(400).json({ error: 'ID is required' });
+  }
+
+  const num_query = 'SELECT COUNT(words.word_id) FROM user_article JOIN words ON user_article.article_id = words.article_id WHERE user_article.user_id = ?';
+  const word_num = await query(num_query, [user_id]);
+    res.json(word_num);
+
 });
 
 module.exports = router;

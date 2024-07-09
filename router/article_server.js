@@ -99,4 +99,35 @@ router.get('/choose-article', (req, res) => { //기사를 article_id 기반으�
     });
 });
 
+router.delete('/delete-article', async (req, res) => { 
+  try {
+    const article_id = req.query.article_id;
+    if (!article_id) {
+      return res.status(400).json({ error: 'article_id and word are required' });
+    }
+    const word_query = 'DELETE FROM user_article WHERE article_id = ?';
+    const insertResult = await query(word_query, [article_id]);
+    
+    // 응답으로 번역된 단어 반환
+    res.json(article_id);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+  
+});
+
+
+router.get('/read-article-num',async(req, res)=>{
+  const user_id = req.query.user_id;
+  if (!user_id) {
+    return res.status(400).json({ error: 'ID is required' });
+  }
+
+  const num_query = 'SELECT COUNT(*) FROM user_article WHERE user_id = ?';
+  const word_num = await query(num_query, [user_id]);
+    res.json(word_num);
+
+});
 module.exports = router;
