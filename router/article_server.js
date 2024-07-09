@@ -12,7 +12,7 @@ router.post('/random-article', async (req, res) => { //random하게 default에�
     try {
       // 요청에서 kakao_id 가져오기
       const kakao_id = req.body.kakao_id;
-      const category = req.body.category ? req.body.category : 'economy';
+      const category = req.body.category ? req.body.category : 'Economy';
       if (!kakao_id) {
         return res.status(400).send('kakao_id is required');
       }
