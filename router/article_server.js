@@ -83,7 +83,7 @@ router.get('/choose-article', (req, res) => { //기사를 article_id 기반으�
         return res.status(400).json({ error: 'ID is required' });
     }
 
-    const query = 'SELECT * FROM article WHERE article_id = ?';
+    const query = 'SELECT * FROM user_article WHERE article_id = ?';
     connection.query(query, [article_id], (err, results) => {
         if (err) {
         console.error('Error executing query:', err.stack);
