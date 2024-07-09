@@ -24,19 +24,28 @@ async function word_translate(word) {
 
 //기사 하나를 출력하는 코드
 async function get_article(category){
-    const prompt = `Just generate only one article about ${category}. please give me the new topic of ${category}.
-    The response must be in the format "Title:" "Contents:":
-    Title: <title of the article in 'string' type, and must be filled with meaningful context.>
-    Contents: <contents of the article, just String>`;
+    const random_number = Math.floor(Math.random() * 100);
+    const prompt = 
+    `you should think 100 topics about ${category}, and use the ${random_number}th topic to generate only one unique article about that topic
+    you don't need to return generated topics only tell me the article
+    The response must only contain two format named Title: and Contents:
+        Title: <title of the article in 'string' type, and must be filled in meaningful context>
+        Contents: <contents of the article, just String>`;
+    
+    
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = await response.text();
+    const cleanedText = text.replace(/\*\*/g, '');
+    console.log(text);
+    const titleMatch = cleanedText.match(/Title:\s*([\s\S]*?)\s*Contents:/);
+    const contentsMatch = cleanedText.match(/Contents:\s*([\s\S]*)/);
 
-    const titleMatch = text.match(/Title:\s*(.*)\s*Contents:/);
-    const contentsMatch = text.match(/Contents:\s*([\s\S]*)/);
+    let title = titleMatch ? titleMatch[1].trim() : 'Untitled';
+    let contents = contentsMatch ? contentsMatch[1].trim() : 'No contents available';
 
-    const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
-    const contents = contentsMatch ? contentsMatch[1].trim() : 'No contents available';
+    title = title.replace(/[#*]/g, '');
+    contents = contents.replace(/[#*]/g, '');
     //console.log(`제목: ${title}`);
     //console.log(`내용: ${contents}`);
 
