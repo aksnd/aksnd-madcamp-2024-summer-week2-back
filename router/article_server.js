@@ -26,11 +26,11 @@ router.post('/random-article', async (req, res) => { //random하게 default에�
       if (title.length === 0 || contents.length=== 0) {
         return res.status(404).send('No articles found');
       }
-      
+      let today = new Date();
       // User_article 테이블에 기사 삽입
       const insertResult= await query(
         'INSERT INTO user_article (user_id, title,category,contents,author,date) VALUES (?, ?, ?, ?, ?, ?)',
-        [kakao_id, title, category, contents,"chatgpt","2024-07-06"]
+        [kakao_id, title, category, contents,"Gemini by Google",`${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`]
       );
   
       const insertedId = insertResult.insertId;
