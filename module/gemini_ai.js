@@ -26,9 +26,10 @@ async function word_translate(word) {
 async function get_article(category){
     const random_number = Math.floor(Math.random() * 100);
     const prompt = 
-    `you should think 100 topics about ${category}, and use the ${random_number}th topic to generate only one unique article about that topic
-    you don't need to return generated topics only tell me the article
-    The response must only contain two format named Title: and Contents:
+    `you should think 100 very diffrent topics about ${category}, and use the ${random_number}th topic to generate only one unique article about that topic
+    you don't need to return 100 generated topics only tell me the choose topic and the article
+    The response must only contain three format named Topic:, Title: and Contents:
+        Topic: <give the topic which is the ${random_number}th topic you think>
         Title: <title of the article in 'string' type, and must be filled in meaningful context>
         Contents: <contents of the article, just String>`;
     
