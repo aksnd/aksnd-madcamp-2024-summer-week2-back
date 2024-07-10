@@ -16,7 +16,7 @@ const {word_translate, get_article} = require('./module/gemini_ai.js');
 const articleRouter = require("./router/article_server");
 const wordRouter = require("./router/word_server");
 const kakaoRouter = require("./router/kakao_login");
-
+const userRouter = require("./router/user_server");
 
 
 
@@ -38,6 +38,7 @@ app.use(express.json());
 app.use("/article", articleRouter);
 app.use("/kakao", kakaoRouter);
 app.use("/words",wordRouter);
+app.use("/user",userRouter);
 
 
 app.listen(port, () => {
