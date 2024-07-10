@@ -15,11 +15,16 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
 //영어단어를 입력하면 해석본을 출력하는 코드
 async function word_translate(word) {
     // The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
-    const prompt = `please translate the english vocabulary '${word}' into Korean. only respond the translated korean word. do not add any prefix or suffix except for the translated korean vocabulary.`;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    return text;
+    try{
+        const prompt = `please translate the english vocabulary '${word}' into Korean. only respond the translated korean word. do not add any prefix or suffix except for the translated korean vocabulary.`;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        return text;
+    }catch(error){
+        console.error("바람직하지 않은 단어");
+        return -1;
+    }
 }
 
 //기사 하나를 출력하는 코드

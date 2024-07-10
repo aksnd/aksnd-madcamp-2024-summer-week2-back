@@ -38,6 +38,9 @@ router.post('/word', async(req, res) => {
     return res.status(400).json({ error: 'article_id and word are required' });
   }
   const translatedWord = await word_translate(word);
+  if(translatedWord===-1){
+    return res.status(404).json({error:'바람직하지 않은 어휘'});
+  }
   const insert_query = 'INSERT INTO words (article_id, word, word_korean) VALUES (?, ?, ?)';
   const insertResult = await query(insert_query, [article_id, word, translatedWord]);
   
