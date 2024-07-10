@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const {backend_ip,port} = require('../module/constants.js');
+const {front_ip,backend_ip,port} = require('../module/constants.js');
 const {connection,query} = require('../module/db.js');
 const {word_translate, get_article} = require('../module/gemini_ai.js');
 
@@ -11,8 +11,14 @@ const {word_translate, get_article} = require('../module/gemini_ai.js');
 router.post('/random-article', async (req, res) => { //random하게 default에서 1개 가져와서 user_id기반으로 집어넣고, 그 기사를 json형식으로 반환하는 코드
     try {
       // 요청에서 kakao_id 가져오기
+      const categorys = ['Politics', 'Business', 'Economy ', 'Science', 'Health','Lifestyle','Culture','Technology'];
+  
+      const getRandomcategorys = () => {
+        const randomIndex = Math.floor(Math.random() * categorys.length);
+        return categorys[randomIndex];
+      };
       const kakao_id = req.body.kakao_id;
-      const category = req.body.category ? req.body.category : 'Economy';
+      const category = req.body.category ? req.body.category : getRandomcategorys();
       if (!kakao_id) {
         return res.status(400).send('kakao_id is required');
       }
@@ -26,11 +32,11 @@ router.post('/random-article', async (req, res) => { //random하게 default에�
       if (title.length === 0 || contents.length=== 0) {
         return res.status(404).send('No articles found');
       }
-      
+      let today = new Date();
       // User_article 테이블에 기사 삽입
       const insertResult= await query(
         'INSERT INTO user_article (user_id, title,category,contents,author,date) VALUES (?, ?, ?, ?, ?, ?)',
-        [kakao_id, title, category, contents,"chatgpt","2024-07-06"]
+        [kakao_id, title, category, contents,"Gemini by Google",`${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`]
       );
   
       const insertedId = insertResult.insertId;

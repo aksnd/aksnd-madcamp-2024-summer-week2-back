@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const {backend_ip,port} = require('../module/constants.js');
+const {front_ip,backend_ip,port} = require('../module/constants.js');
 const {connection,query} = require('../module/db.js');
 const {word_translate, get_article} = require('../module/gemini_ai.js');
 
@@ -38,6 +38,9 @@ router.post('/word', async(req, res) => {
     return res.status(400).json({ error: 'article_id and word are required' });
   }
   const translatedWord = await word_translate(word);
+  if(translatedWord===-1){
+    return res.status(404).json({error:'바람직하지 않은 어휘'});
+  }
   const insert_query = 'INSERT INTO words (article_id, word, word_korean) VALUES (?, ?, ?)';
   const insertResult = await query(insert_query, [article_id, word, translatedWord]);
   
