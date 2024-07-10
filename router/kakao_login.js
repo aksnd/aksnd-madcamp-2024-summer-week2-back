@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const {backend_ip,port} = require('../module/constants.js');
+const {front_ip,backend_ip,port} = require('../module/constants.js');
 const {connection,query} = require('../module/db.js');
 const {word_translate, get_article} = require('../module/gemini_ai.js');
 
