@@ -42,10 +42,10 @@ gemini를 기반으로 한 기사 생성 후, 해당 기사를 공부하며 모�
 마지막 문제가 되면 어떤 단어를 맞췄는지, 어떤 단어를 틀렸는지 확인 가능
 
 # [3] 주요 사용 technology (배운 내용)
-kakao-login 구현
-gemini api 사용법
-aws 연동 및 aws 내에 mysql 설치 방법
-mysql db 사용법 및 query 사용법
+- kakao-login 구현
+- gemini api 사용법
+- aws 연동 및 aws 내에 mysql 설치 방법
+- mysql db 사용법 및 query 사용법
 
 
 # [4] 구동 방법
