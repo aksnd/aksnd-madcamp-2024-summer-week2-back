@@ -63,7 +63,7 @@ gemini를 기반으로 한 기사 생성 후, 해당 기사를 공부하며 모�
 ## 박지훈 <https://github.com/aksnd> - Backend Developer, Frontend support
 - kakao login 구현, gemini api 연결, aws 연결, MySQL DB 및 API 작성, frontend 기능 구현 지원
 ## 주서현 <https://github.com/seohyj> -Frontend Developer, Designer
-- 프론트 엔드 디자인, UI구성, 기능 구현
+- 프론트 엔드 디자인, UI구성, 기능 구현, api 구현
 
 
 # [6] 참고 자료
